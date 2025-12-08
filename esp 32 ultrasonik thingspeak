@@ -1,0 +1,40 @@
+import machine
+import time
+import network
+import urequests
+
+# Inisialisasi pin
+trig = machine.Pin(2, machine.Pin.OUT)
+echo = machine.Pin(3, machine.Pin.IN)
+
+# Inisialisasi WiFi
+wifi = network.WLAN(network.STA_IF)
+wifi.active(True)
+# ganti SSID & PASSWORD
+wifi.connect('SSID', 'PASSWORD')
+
+# Inisialisasi Thingspeak
+# ganti API key thingspeak
+thingspeak_api_key = 'YOUR_API_KEY'
+thingspeak_url = 'https://api.thingspeak.com/update?api_key=' + thingspeak_api_key
+
+def get_distance():
+    trig.value(0)
+    time.sleep_us(2)
+    trig.value(1)
+    time.sleep_us(10)
+    trig.value(0)
+    while echo.value() == 0:
+        pulse_start = time.ticks_us()
+    while echo.value() == 1:
+        pulse_end = time.ticks_us()
+    pulse_duration = pulse_end - pulse_start
+    distance = pulse_duration * 0.0343 / 2
+    return distance
+
+while True:
+    distance = get_distance()
+    urequests.get(thingspeak_url + '&field1=' + str(distance))
+    time.sleep(15)
+
+
